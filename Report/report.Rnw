@@ -22,13 +22,13 @@ calcwidth=1.0\linewidth
 
 \section{Introduction and Motivation}
 
-The point system of the NHL currently awards two points to the winner, one point to a team that loses either in overtime or in a shoot-out, and zero points to a team that loses in regulation time. Our analysis is an attempt to explain the number of points that a team will get in a season using linear regression. The variables in our model include how many goals a team has scored or allowed, how many shots they have taken or allowed, how old their players are, and perhaps other variables. It is important to note that we do not need to know the outcome of any particular game to do this and we are using aggregate quantities to determine a teams current season standing.
+The point system of the NHL currently awards two points to the winner, one point to a team that loses either in overtime or in a shoot-out, and zero points to a team that loses in regulation time. From a broad range of variables including (but not limited to): Goals Scored, Goals Allowed, Shots Taken, Shots Allowed, Age of Players, we an attempt to explain end of season point totals for individual teams by way of linear regression. For our analysis, we do not make use of particular data from any individual game, as we are using aggregate quanitities to determine a teams current season standing.
 
-Our data is from the 2007--2008 season to the 2014--2015 season -- before this some of our advanced metrics weren't available. A peculiarity of our is that the season of 2012--2013 was affected by a lockout which led to only 48 out of 82 games played (GP). Despite this apparent mixing of data we still use all of the data in our analysis and deal with this problem by scaling certain covariates by the proportion of the season which a team has played.
+Our data ranges from the 2007--2008 season to the 2014--2015 season. Before the 2007--2008 season many of our advanced metrics were not available. A peculiarity of our data is that the 2012--2013 was affected by a lockout which led to only 48 out of a usual 82 games played. Despite this apparent mixing of data we still use all of this season in our analysis and deal with this problem by scaling certain covariates by the proportion of the season in which a team has played.
 
 \section{Exploratory analysis}
 
-Many of the variables in hockey data are redundant. For instance, points summarizes the number of wins, losses and overtime or shootout losses a team has and faceoff percentage summarizes the number of faceoffs a team has won and lost. We tried to choose variables that conveyed different information to avoid colinearity. These variables are shown below.
+Many of the variables in hockey data are redundant. Points summarizes the number of wins, losses, and overtime or shootout losses a team has, while faceoff percentage summarizes the number of faceoffs a team has won and lost. In selecting appropriate predictor data, our aim was to choose variables that conveyed different information to avoid colinearity. These variables are shown below.
 
 \begin{table}[ht]
 \small
@@ -45,7 +45,7 @@ GF & Goals For & Goals scored & SHA & Short-handed goals allowed & Goals allowed
 PK\% & Penalty kill perrcentage & Percentage other team scores on power play & SOS & Strength of schedule & Looks at whether team is good due to weak opponents \\ \hline
 PP\% & Power play percentage & Percentage team scores on power play & SRS & Simple rating system & Takes into account average goal differential \\ \hline
 \end{tabular} 
-\caption{Important hockey statistics used in our analysis}
+\caption{Hockey statistics used in our analysis}
 \end{table}
 
 <<echo=FALSE, fig=FALSE,label=basic_model,width=5.00,height=5.25>>=
@@ -80,7 +80,7 @@ rule=0pt, indent=0em]
 \includegraphics[width=1.0\textwidth]{report-basic_model}
 \vspace{-12mm}
 \setcounter{figure}{0}
-\captionof{figure}{The model PTS = $\beta_{0}$ + $\beta_{1}$ GF + $\beta_{2}$ GA}
+\captionof{figure}{The model PTS = $\beta_{0}$ + $\beta_{1}*$ GF + $\beta_{2}*$ GA}
 \end{minipage}
 
 <<echo=FALSE>>=
@@ -176,14 +176,15 @@ SRS48.sd <- sd(GP48$SRS)
 \end{minipage}
 \end{vwcol}
 
+% I added in multiplication symbols because when I was reading it on paper it was initially hard to make out what the scope of predictor formula was.
 \vspace{-25mm}\noindent
-A well-known model for predicting points in hockey is PTS = $\beta_{0} + \beta_{1}$ GF + $\beta_{2}$ GA, shown above in Figure 1 for non-lockout seasons. Notice that the dots are nicely scattered around the plane, but there are a few outliers. Later on, we show that it is possible to obtain a model with a lower $R^{2}_{Adj}$ and out of sample MSE by incorporating other variables into the model.
+A well-known model for predicting points in hockey is PTS = $\beta_{0} + \beta_{1}*$ GF + $\beta_{2}*$ GA, shown above in Figure 1 for non-lockout seasons. Notice that the dots are nicely scattered around the plane with the exception of a few outliers. Later on, we show that it is possible to obtain a model with a lower $R^{2}_{Adj}$ and out of sample MSE by incorporating other variables into the model.
 
-Not all of the variables increase as the number of games played increases. In particular, AvAge, FF\%, PK\%, PP\%, SOS and SRS are relatively stable as the number of games played changes. This is evident by comparing the value of PK\% in the 48 game season to the value of PK\% in the 82 game season in Table 2. Later on in our analysis, when we predict points in the 2015--2016 season, we scale the coefficients of these variables by the proportion of the season which a team has played and obtain the MSE of these predictions.
+Not all of the variables increase as the number of games played increases. In particular, AvAge, FF\%, PK\%, PP\%, SOS and SRS are relatively stable as the number of games played changes. This is evident by comparing the value of PK\% in the 48 game season to the value of PK\% in the 82 game season in Table 2. Later on in our analysis, when we predict points in the 2015--2016 season, we scale only the coefficients of the variables for which we expect to see increase by the proportion of the season a team has played. We then obtain the out of sample Mean Squared Error of these predictions.
 
 \section{Methods}
 
-To explain the number of points a team, we used multivariate regression. We used the R function from the \texttt{leaps} package to determine the best model given a certain number of covariates. This function tried all possible combinations of the variables shown in Table 1 given a fixed model size and returned the variables which were most significant (had the smallest $p$-values). We then compared models of different sizes using $R^{2}_{Adj}$ and out of sample MSE (MSPE) based our current season points predictions as at November 21, 2015.
+To explain total points accumulated for a specific team we used multivariate regression. We used the R function from the \texttt{leaps} package to determine the best model given a certain number of covariates. This function tried all possible combinations of the variables shown in Table 1 given a fixed model size and returned the variables which were most significant (had the smallest $p$-values). We then compared models of different sizes using $R^{2}_{Adj}$ and out of sample MSE (MSPE). Wep based our current season points predictions as at November 21, 2015.
 
 As explained previously, some variables are not proportional to the number of games a team plays. For this reason, some variables such as SRS and SOS did not work very well when including the lockout season in the training set. We fit separate models on two training sets, one of which included the 48 game lockout season and one of which excluded the 48 game lockout season. The models shown in Table 3 and Table 4 use the variables suggested by the \texttt{regsubsets} function.
 
@@ -246,7 +247,7 @@ $p$ & \Sexpr{round(sm8.c[1,4], 4)} & \Sexpr{round(sm8.c[2,4], 4)} & \Sexpr{round
 \caption{Models fit to data with 2012--2013 lockout season included}
 \end{table}
 
-\medskip\noindent When models were fit to the first training set, we can see that goals for and goals against are important variables followed by shots and shots against. Most of the coefficients have an intuitive explanation. For instance, if a team scores many goals they have a better chance of winning games and getting more points so the coefficient for goals for is positive. There are notable interesting coefficients such as the coefficient for average age, which is positive. This would imply that teams with older players tend to do better than teams with younger players since they have more experience.
+\medskip\noindent When models were fit to the first training set, we can see that goals for (GF) and goals against (GA) are the most important variables followed by shots (S) and shots against (SA). Most of the coefficients have an intuitive explanation. For instance, if a team scores many goals they have a better chance of winning games and getting more points so the coefficient for goals for is positive. There are notable interesting coefficients such as the coefficient for average age, which is positive. One interpretation of the posisitive average age coefficient might imply that teams with older players tend to do better than teams with younger players since they have more experience.
 
 <<echo=FALSE>>=
 sm3nl <- summary(model3nl)
@@ -283,7 +284,7 @@ $p$ & \Sexpr{round(sm5nl.c[1,4], 4)} & \Sexpr{round(sm5nl.c[2,4], 4)} & \Sexpr{r
 \caption{Models fit to data with 2012--2013 lockout season excluded}
 \end{table}
 
-\medskip\noindent For the second training set, we can see that goals for and goals against are no longer the most significant variables in small models, replaced instead by the simple rating system and strength of schedule metrics. When models were fit to this training set we found that $R^{2}_{Adj}$ values were smaller, most likely as a result of using less data when fitting the model. We ended up choosing the model PTS = $\beta_{0}$ + $\beta_{1}$GF + $\beta_{2}$GA + $\beta_{3}$S + $\beta_{4}$SA since it had the best MSPE, comparable $R^{2}_{Adj}$ to other models and is a model which is easy to interpret. 
+\medskip\noindent For the second training set, we can see that goals for and goals against are no longer the most significant variables in small models, replaced instead by the simple rating system and strength of schedule metrics. When models were fit to this training set we found that $R^{2}_{Adj}$ values were smaller, most likely as a result of using less data when fitting the model. We ended up choosing the model PTS = $\beta_{0}$ + $\beta_{1}$GF + $\beta_{2}$GA + $\beta_{3}$S + $\beta_{4}$SA as it has the best MSPE, a comparable $R^{2}_{Adj}$ to other models, and is a model which is easily interpretable. 
 
 \section{Results}
 
@@ -292,7 +293,7 @@ $p$ & \Sexpr{round(sm5nl.c[1,4], 4)} & \Sexpr{round(sm5nl.c[2,4], 4)} & \Sexpr{r
 library(xtable)
 ptable <- data.frame(Team=team_names, Actual=actual_pts, Predicted=pmodel4)
 ptable <- cbind(ptable[1:15,],ptable[16:30,])
-print(xtable(ptable,digits=c(0,0,0,2,0,0,2),align="llrr|lrr",caption="Predictions for 2015--2016 season at November 21, 2015 using the model PTS = $\\beta_{0}$ + $\\beta_{1}$GF + $\\beta_{2}$GA + $\\beta_{3}$S + $\\beta_{4}$SA fit with the lockout season included"),include.rownames=F,size="small")
+print(xtable(ptable,digits=c(0,0,0,2,0,0,2),align="llrr|lrr",caption="Predictions for 2015--2016 season at November 21, 2015 using the model PTS = $\\beta_{0}$ + $\\beta_{1}*$GF + $\\beta_{2}*$GA + $\\beta_{3}*$S + $\\beta_{4}*$SA fit with the lockout season included"),include.rownames=F,size="small")
 @
 
 \noindent
@@ -315,12 +316,12 @@ abline(h=0, col='red', lty=2)
 \includegraphics[width=0.9\textwidth]{report-residual_plots}
 \end{center}
 \vspace{-9mm}
-\caption{{\small Residuals (fitted: left; predicted: right) for PTS = $\beta_{0} + \beta_{1}$GF + $\beta_{2}$GA + $\beta_{3}$S + $\beta_{4}$SA}}
+\caption{{\small Residuals (fitted: left; predicted: right) for PTS = $\beta_{0} + \beta_{1}*$GF + $\beta_{2}*$GA + $\beta_{3}*$S + $\beta_{4}*$SA}}
 \end{figure}
 
 \vspace{-7mm}
 \section{Conclusion}
 
-We compared models using $R^{2}_{Adj}$ and MSPE and chose the model PTS = $\beta_{0} + \beta_{1}$GF + $\beta_{2}$GA + $\beta_{3}$S + $\beta_{4}$SA. Our model can estimate the points a team has any time during the season if these variables are known. An area for future work would be to project a teams end of season points, perhaps with the use of a time series model.
+We compared models using $R^{2}_{Adj}$ and MSPE and chose the model PTS = $\beta_{0} + \beta_{1}*$GF + $\beta_{2}*$GA + $\beta_{3}*$S + $\beta_{4}*$SA. Our model can estimate the points a team has any time during the season if these variables are known. An area for future work would be to project a teams end of season points, perhaps with the use of a time series model.
 
 \end{document}
